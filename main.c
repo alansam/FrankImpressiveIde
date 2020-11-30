@@ -1,3 +1,5 @@
+//  @see: https://rosettacode.org/wiki/Sorting_algorithms/Radix_sort#C
+//  @see: https://stackoverflow.com/questions/33657031/radix-sort-descending
 #include <stdio.h>
 #include <limits.h>
 #include <stdlib.h>
@@ -6,6 +8,17 @@
 void RadixSortA(int a[], size_t n);
 void RadixSortD(int a[], size_t n);
 
+//  Array Printer
+inline
+static void show_n_tell(size_t const len, int const ary[len],
+                        size_t const bk) {
+  for (size_t y_ = 0, c_ = 0; y_ < len; ++y_) {
+    printf("%4d%s", ary[y_], (++c_ % bk == 0 ? "\n" : ""));
+  }
+  putchar('\n');
+}
+
+//  MARK: - Example from RosettaCode
 // Get size of statically allocated array
 #define ARR_LEN(ARR) (sizeof ARR / sizeof *ARR)
 // Generate random number in the interval [M,N]
@@ -71,16 +84,12 @@ static void radix_sort(int * a, const size_t len)
   }
 }
 
-inline
-static void show_n_tell(size_t const len, int const ary[len],
-                        size_t const bk) {
-  for (size_t y_ = 0, c_ = 0; y_ < len; ++y_) {
-    printf("%4d%s", ary[y_], (++c_ % bk == 0 ? "\n" : ""));
-  }
-  putchar('\n');
-}
+//  MARK: main()
+//  Blended calls to solutions.
 int main(int argc, char const * argv[]) {
 
+  //  ------------------------------------------------------
+  // Rosettacode
   srand(time(NULL));
   int x[16];
 
@@ -98,6 +107,8 @@ int main(int argc, char const * argv[]) {
     printf("%d%c", x[i], i + 1 < ARR_LEN(x) ? ' ' : '\n');
   }
 
+  //  ------------------------------------------------------
+  //  StackOverflow
   putchar('\n');
   int samples[] = {
     38, 124, 67, 10,  28, 39, 54, 13,
@@ -120,6 +131,7 @@ int main(int argc, char const * argv[]) {
   return EXIT_SUCCESS;
 }
 
+//  MARK: - Example from StackOverflow
 #define MAX 20
 void RadixSortA(int a[], size_t n) {
     int i, m = 0, exp = 1, b[MAX];
