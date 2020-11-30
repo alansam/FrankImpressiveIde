@@ -4,9 +4,12 @@
 #include <limits.h>
 #include <stdlib.h>
 #include <time.h>
+#include <unistd.h>
+#include <math.h>
 
-void RadixSortA(int a[], size_t n);
-void RadixSortD(int a[], size_t n);
+void RadixSortA(size_t len, int sort_this[len]);
+void RadixSortD(size_t len, int sort_this[len]);
+void RadixSort(size_t len, int sort_this[len], char dir);
 
 //  Array Printer
 inline
@@ -110,77 +113,154 @@ int main(int argc, char const * argv[]) {
   //  ------------------------------------------------------
   //  StackOverflow
   putchar('\n');
-  int samples[] = {
-    38, 124, 67, 10,  28, 39, 54, 13,
-    58,   1, 38, 72, 113, 25, 53, 23,
-  };
-  size_t samples_l = sizeof(samples) / sizeof(*samples);
-  show_n_tell(samples_l, samples, 8);
-  RadixSortA(samples, samples_l);
-  show_n_tell(samples_l, samples, 8);
+  {
+    int samples[] = {
+      38, 124, 67, 10,  28, 39, 54, 13,
+      58,   1, 38, 72, 113, 25, 53, 23,
+    };
+    size_t samples_l = sizeof(samples) / sizeof(*samples);
+    show_n_tell(samples_l, samples, 8);
+    RadixSortA(samples_l, samples);
+    show_n_tell(samples_l, samples, 8);
+  }
 
-  int simples[] = {
-    38, 124, 67, 10,  28, 39, 54, 13,
-    58,   1, 38, 72, 113, 25, 53, 23,
-  };
-  size_t simples_l = sizeof(simples) / sizeof(*simples);
-  show_n_tell(simples_l, simples, 8);
-  RadixSortD(simples, simples_l);
-  show_n_tell(simples_l, simples, 8);
+  {
+    int samples[] = {
+      38, 124, 67, 10,  28, 39, 54, 13,
+      58,   1, 38, 72, 113, 25, 53, 23,
+    };
+    size_t samples_l = sizeof(samples) / sizeof(*samples);
+    show_n_tell(samples_l, samples, 8);
+    RadixSortD(samples_l, samples);
+    show_n_tell(samples_l, samples, 8);
+  }
+
+  {
+    int samples[] = {
+      38, 124, 67, 10,  28, 39, 54, 13,
+      58,   1, 38, 72, 113, 25, 53, 23,
+    };
+    size_t samples_l = sizeof(samples) / sizeof(*samples);
+    show_n_tell(samples_l, samples, 8);
+    RadixSort(samples_l, samples, 'A');
+    show_n_tell(samples_l, samples, 8);
+  }
+
+  {
+    int samples[] = {
+      38, 124, 67, 10,  28, 39, 54, 13,
+      58,   1, 38, 72, 113, 25, 53, 23,
+    };
+    size_t samples_l = sizeof(samples) / sizeof(*samples);
+    show_n_tell(samples_l, samples, 8);
+    RadixSort(samples_l, samples, 'D');
+    show_n_tell(samples_l, samples, 8);
+  }
 
   return EXIT_SUCCESS;
 }
 
 //  MARK: - Example from StackOverflow
 #define MAX 20
-void RadixSortA(int a[], size_t n) {
-    int i, m = 0, exp = 1, b[MAX];
-    for (i = 0; i < n; i++)
-    {
-        if (a[i] > m)
-            m = a[i];
-    }
-    while (m / exp > 0)
-    {
-        int bucket[10] = { 0, };
-        for (i = 0; i < n; i++) {
-          bucket[a[i] / exp % 10]++;
-        }
-        for (i = 1; i < 10; i++) {
-            bucket[i] += bucket[i - 1];
-        }
-        for (i = n - 1; i >= 0; i--) {
-            b[--bucket[a[i] / exp % 10]] = a[i];
-        }
-        for (i = 0; i < n; i++) {
-            a[i] = b[i];
-        }
-        exp *= 10;
-    }
-}
+void RadixSortA(size_t len, int sort_this[len]) {
+  int max = 0, exp = 1, work[MAX];
 
-void RadixSortD(int a[], size_t n) {
-  int i, m = 0, exp = 1, b[MAX];
-  for (i = 0; i < n; i++) {
-    if (a[i] > m) {
-      m = a[i];
+  for (size_t i_ = 0; i_ < len; i_++) {
+    if (sort_this[i_] > max) {
+      max = sort_this[i_];
     }
   }
 
-  while (m / exp > 0)
-  {
-    int bucket[10]={0};
-    for (i = 0; i < n; i++) {
-      bucket[9 - a[i] / exp % 10]++;         // changed this line
+  while (max / exp > 0) {
+    int bucket[10] = { 0, };
+    for (size_t i_ = 0; i_ < len; i_++) {
+      bucket[sort_this[i_] / exp % 10]++;
     }
-    for (i = 1; i < 10; i++) {
-      bucket[i] += bucket[i - 1];
+
+    for (size_t i_ = 1; i_ < 10; i_++) {
+      bucket[i_] += bucket[i_ - 1];
     }
-    for (i = n - 1; i >= 0; i--) {
-      b[--bucket[9 - a[i] / exp % 10]] = a[i]; // changed this line
+
+    for (ssize_t y_ = len - 1; y_ >= 0; y_--) {
+      work[--bucket[sort_this[y_] / exp % 10]] = sort_this[y_];
     }
-    for (i = 0; i < n; i++) {
-      a[i] = b[i];                       // changed this line
+
+    for (size_t i_ = 0; i_ < len; i_++) {
+      sort_this[i_] = work[i_];
+    }
+
+    exp *= 10;
+  }
+}
+
+void RadixSortD(size_t len, int sort_this[len]) {
+  int max = 0, exp = 1, work[MAX];
+
+  for (size_t i_ = 0; i_ < len; i_++) {
+    if (sort_this[i_] > max) {
+      max = sort_this[i_];
+    }
+  }
+
+  while (max / exp > 0) {
+    int bucket[10] = { 0, };
+    for (size_t i_ = 0; i_ < len; i_++) {
+      bucket[9 - sort_this[i_] / exp % 10]++;  // changed this line
+    }
+
+    for (size_t i_ = 1; i_ < 10; i_++) {
+      bucket[i_] += bucket[i_ - 1];
+    }
+
+    for (ssize_t y_ = len - 1; y_ >= 0; y_--) {
+      work[--bucket[9 - sort_this[y_] / exp % 10]] = sort_this[y_]; // changed this line
+    }
+
+    for (size_t i_ = 0; i_ < len; i_++) {
+      sort_this[i_] = work[i_];              // changed this line
+    }
+
+    exp *= 10;
+  }
+}
+
+void RadixSort(size_t len, int sort_this[len], char dir) {
+  int max = 0, exp = 1, work[MAX];
+
+  for (size_t i_ = 0; i_ < len; i_++) {
+    if (sort_this[i_] > max) {
+      max = sort_this[i_];
+    }
+  }
+
+  int adjust;
+  switch (dir) {
+  case 'D':
+    adjust = 9;
+    break;
+
+  case 'A':
+  default:
+    adjust = 0;
+    break;
+  }
+
+  while (max / exp > 0) {
+    int bucket[10] = { 0, };
+    for (size_t i_ = 0; i_ < len; i_++) {
+      bucket[abs(adjust - sort_this[i_] / exp % 10)]++;  // changed this line
+    }
+
+    for (size_t i_ = 1; i_ < 10; i_++) {
+      bucket[i_] += bucket[i_ - 1];
+    }
+
+    for (ssize_t y_ = len - 1; y_ >= 0; y_--) {
+      work[--bucket[abs(adjust - sort_this[y_] / exp % 10)]] = sort_this[y_]; // changed this line
+    }
+
+    for (size_t i_ = 0; i_ < len; i_++) {
+      sort_this[i_] = work[i_];              // changed this line
     }
 
     exp *= 10;
