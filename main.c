@@ -16,9 +16,25 @@ inline
 static void show_n_tell(size_t const len, int const ary[len],
                         size_t const bk) {
   for (size_t y_ = 0, c_ = 0; y_ < len; ++y_) {
-    printf("%4d%s", ary[y_], (++c_ % bk == 0 ? "\n" : ""));
+    printf("%5d%s", ary[y_], (++c_ % bk == 0 ? "\n" : ""));
   }
   putchar('\n');
+}
+
+inline
+static int smallest(size_t len, int search[len]) {
+  int min = 0;
+  for (size_t i_ = 0; i_ < len; ++i_) {
+    min = min > search[i_] ? search[i_] : min;
+  }
+  return min;
+}
+
+inline
+static void min_adjust(size_t len, int update[len], int min) {
+  for (size_t i_ = 0; i_ < len; ++i_) {
+    update[i_] -= min;
+  }
 }
 
 //  MARK: - Example from RosettaCode
@@ -114,44 +130,52 @@ int main(int argc, char const * argv[]) {
   //  StackOverflow
   putchar('\n');
   {
+    puts("sort 1 [ascending]");
     int samples[] = {
       38, 124, 67, 10,  28, 39, 54, 13,
       58,   1, 38, 72, 113, 25, 53, 23,
     };
     size_t samples_l = sizeof(samples) / sizeof(*samples);
+
     show_n_tell(samples_l, samples, 8);
     RadixSortA(samples_l, samples);
     show_n_tell(samples_l, samples, 8);
   }
 
   {
+    puts("sort 2 [descending]");
     int samples[] = {
       38, 124, 67, 10,  28, 39, 54, 13,
       58,   1, 38, 72, 113, 25, 53, 23,
     };
     size_t samples_l = sizeof(samples) / sizeof(*samples);
+
     show_n_tell(samples_l, samples, 8);
     RadixSortD(samples_l, samples);
     show_n_tell(samples_l, samples, 8);
   }
 
   {
+    puts("sort 3 [ascending]");
     int samples[] = {
-      38, 124, 67, 10,  28, 39, 54, 13,
-      58,   1, 38, 72, 113, 25, 53, 23,
+      -38, 124, -67, 10,  -28, 39,  54, -13,
+       58,   1,  38, 72, -113, 25, -53,  23,
     };
     size_t samples_l = sizeof(samples) / sizeof(*samples);
+
     show_n_tell(samples_l, samples, 8);
     RadixSort(samples_l, samples, 'A');
     show_n_tell(samples_l, samples, 8);
   }
 
   {
+    puts("sort 4 [descending]");
     int samples[] = {
-      38, 124, 67, 10,  28, 39, 54, 13,
-      58,   1, 38, 72, 113, 25, 53, 23,
+      -38, 124, -67, 10,  -28, 39,  54, -13,
+       58,   1,  38, 72, -113, 25, -53,  23,
     };
     size_t samples_l = sizeof(samples) / sizeof(*samples);
+
     show_n_tell(samples_l, samples, 8);
     RadixSort(samples_l, samples, 'D');
     show_n_tell(samples_l, samples, 8);
@@ -161,9 +185,14 @@ int main(int argc, char const * argv[]) {
 }
 
 //  MARK: - Example from StackOverflow
-#define MAX 20
 void RadixSortA(size_t len, int sort_this[len]) {
-  int max = 0, exp = 1, work[MAX];
+  int max = 0, exp = 1;
+  int * work;
+
+  work = malloc(len * sizeof(int));
+  if (work == NULL) {
+    exit(EXIT_FAILURE);
+  }
 
   for (size_t i_ = 0; i_ < len; i_++) {
     if (sort_this[i_] > max) {
@@ -191,10 +220,18 @@ void RadixSortA(size_t len, int sort_this[len]) {
 
     exp *= 10;
   }
+
+  free(work);
 }
 
 void RadixSortD(size_t len, int sort_this[len]) {
-  int max = 0, exp = 1, work[MAX];
+  int max = 0, exp = 1;
+  int * work;
+
+  work = malloc(len * sizeof(int));
+  if (work == NULL) {
+    exit(EXIT_FAILURE);
+  }
 
   for (size_t i_ = 0; i_ < len; i_++) {
     if (sort_this[i_] > max) {
@@ -222,10 +259,39 @@ void RadixSortD(size_t len, int sort_this[len]) {
 
     exp *= 10;
   }
+
+  free(work);
 }
 
+#define AS_DEBUG_ 1
+#undef AS_DEBUG_
+/*
+ *  Radix sort: handles +ve & -ve integers
+ *  in ascending & descending order.
+ */
+#ifdef __cplusplus
+extern "C"
+#endif
 void RadixSort(size_t len, int sort_this[len], char dir) {
-  int max = 0, exp = 1, work[MAX];
+  int max = 0, exp = 1;
+  int * work;
+  int min;
+
+  work =
+#ifdef __cplusplus
+  (int *)
+#endif
+  malloc(len * sizeof(int));
+  if (work == NULL) {
+    exit(EXIT_FAILURE);
+  }
+
+  // shunt values in array so all values are +ve
+  min = smallest(len, sort_this);
+  min_adjust(len, sort_this, min);
+#ifdef AS_DEBUG_
+  show_n_tell(len, sort_this, 8);
+#endif
 
   for (size_t i_ = 0; i_ < len; i_++) {
     if (sort_this[i_] > max) {
@@ -256,7 +322,8 @@ void RadixSort(size_t len, int sort_this[len], char dir) {
     }
 
     for (ssize_t y_ = len - 1; y_ >= 0; y_--) {
-      work[--bucket[abs(adjust - sort_this[y_] / exp % 10)]] = sort_this[y_]; // changed this line
+      work[--bucket[abs(adjust - sort_this[y_] / exp % 10)]] =
+        sort_this[y_]; // changed this line
     }
 
     for (size_t i_ = 0; i_ < len; i_++) {
@@ -265,4 +332,12 @@ void RadixSort(size_t len, int sort_this[len], char dir) {
 
     exp *= 10;
   }
+
+#ifdef AS_DEBUG_
+  show_n_tell(len, sort_this, 8);
+#endif
+  //  return array to original values
+  min_adjust(len, sort_this, -min);
+
+  free(work);
 }
